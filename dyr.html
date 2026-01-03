@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do You Realize</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Crimson+Text:wght@300;400&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Crimson Text', serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            pointer-events: none;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #button-container {
+            width: 5rem;
+            height: 5rem;
+            margin-top: 2rem;
+        }
+        
+        .text-overlay {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            opacity: 0.9;
+            letter-spacing: 0.15em;
+            line-height: 1.4;
+        }
+        
+        .stats {
+            position: fixed;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Crimson Text', serif;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            text-align: center;
+            z-index: 11;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 400;
+        }
+        
+        .stat-deceased {
+            color: #8fb3d9; /* Blue like the deceased particles */
+        }
+        
+        .stat-alive {
+            color: #ffb84d; /* Gold/orange like the alive particles */
+        }
+
+        .sound-note {
+            font-family: 'Crimson Text', serif;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-top: 1.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            font-family: 'Crimson Text', serif;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 200, 100, 0.5);
+        }
+        
+        #startBtn {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 300;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            padding: 0;
+            margin: 0;
+            letter-spacing: 0;
+            border-radius: 4px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            line-height: 1;
+        }
+        
+        #startBtn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 200, 100, 0.7);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 200, 100, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="overlay">
+        <div class="text-overlay">do you realize</div>
+        <div id="button-container">
+            <button id="startBtn">?</button>
+        </div>
+        <div class="sound-note">this experience includes sound</div>
+    </div>
+    <div id="stats" class="stats"></div>
+
+    <audio id="backgroundMusic" src="do_you_realize_audio.mp3" preload="auto" loop></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // PRB DATA - exact from the table
+        const benchmarks = [
+            { year: "50000 BCE", population: 2000000, birthsBetween: 7856100000, totalEverBorn: 7856100002, duration: 8 },
+            { year: "8000 BCE", population: 5000000, birthsBetween: 1137789769, totalEverBorn: 8993889771, duration: 6 },
+            { year: "1 CE", population: 300000000, birthsBetween: 46025332354, totalEverBorn: 55019222125, duration: 8 },
+            { year: "1200", population: 450000000, birthsBetween: 26591343000, totalEverBorn: 81610565125, duration: 6 },
+            { year: "1650", population: 500000000, birthsBetween: 12782002453, totalEverBorn: 94392567578, duration: 5 },
+            { year: "1750", population: 795000000, birthsBetween: 3171931513, totalEverBorn: 97564499091, duration: 5 },
+            { year: "1850", population: 1265000000, birthsBetween: 4046240009, totalEverBorn: 101610739100, duration: 5 },
+            { year: "1900", population: 1656000000, birthsBetween: 2900237856, totalEverBorn: 104510976956, duration: 6 },
+            { year: "1950", population: 2499000000, birthsBetween: 3390198215, totalEverBorn: 107901175171, duration: 6 },
+            { year: "2000", population: 6149000000, birthsBetween: 6064994884, totalEverBorn: 113966170055, duration: 7 },
+            { year: "2010", population: 6986000000, birthsBetween: 1364003405, totalEverBorn: 115330173460, duration: 5 },
+            { year: "2022", population: 7963500000, birthsBetween: 1690275115, totalEverBorn: 117020448575, duration: 8 }
+        ];
+        
+        const PARTICLE_COUNT = 200000;
+        const PARTICLES_PER_PERSON = 117020448575 / PARTICLE_COUNT;
+        
+        let scene, camera, renderer, particles;
+        let colors, sizes;
+        let particleIndex = 0; // Next particle to activate
+        let currentBenchmarkIndex = 0;
+        let benchmarkProgress = 0;
+        let isAnimating = false;
+        let isFrozen = false;
+        let clock;
+        let speedMultiplier = 0.5; // Default to 0.5x speed
+        
+        function createCircleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+        
+        function init() {
+            clock = new THREE.Clock();
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.0008);
+            
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
+            camera.position.z = 1000;
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Initialize particles
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            colors = new Float32Array(PARTICLE_COUNT * 3);
+            sizes = new Float32Array(PARTICLE_COUNT);
+            
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const radius = 300 + Math.random() * 600;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i * 3 + 2] = radius * Math.cos(phi);
+                
+                // All start invisible
+                colors[i * 3] = 0;
+                colors[i * 3 + 1] = 0;
+                colors[i * 3 + 2] = 0;
+                sizes[i] = 0;
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            
+            const material = new THREE.PointsMaterial({
+                size: 3,
+                vertexColors: true,
+                transparent: true,
+                opacity: 1.0, // Increased from 0.9 for more vibrant glow
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true,
+                map: createCircleTexture()
+            });
+            
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function updateBenchmark(deltaTime) {
+            if (isFrozen || currentBenchmarkIndex >= benchmarks.length) return;
+            
+            const benchmark = benchmarks[currentBenchmarkIndex];
+            benchmarkProgress += (deltaTime * speedMultiplier) / benchmark.duration;
+            
+            if (benchmarkProgress >= 1) {
+                benchmarkProgress = 0;
+                currentBenchmarkIndex++;
+                
+                // Check if we just finished the LAST benchmark (index 11, which is 2022)
+                if (currentBenchmarkIndex >= benchmarks.length) {
+                    isFrozen = true;
+                }
+                return;
+            }
+            
+            // Calculate how many particles should be shown by now
+            const prevTotal = currentBenchmarkIndex === 0 ? 0 : benchmarks[currentBenchmarkIndex - 1].totalEverBorn;
+            const currentTotal = prevTotal + (benchmark.birthsBetween * benchmarkProgress);
+            const targetParticles = Math.floor(currentTotal / PARTICLES_PER_PERSON);
+            
+            // Activate new particles (all start as DECEASED/blue)
+            while (particleIndex < targetParticles && particleIndex < PARTICLE_COUNT) {
+                colors[particleIndex * 3] = 0.5 + Math.random() * 0.2;
+                colors[particleIndex * 3 + 1] = 0.6 + Math.random() * 0.2;
+                colors[particleIndex * 3 + 2] = 0.85 + Math.random() * 0.15;
+                sizes[particleIndex] = 1.5 + Math.random();
+                particleIndex++;
+            }
+            
+            // TWEEN the alive population between previous and current benchmark
+            const prevPopulation = currentBenchmarkIndex === 0 ? 2 : benchmarks[currentBenchmarkIndex - 1].population;
+            const currentPopulation = prevPopulation + ((benchmark.population - prevPopulation) * benchmarkProgress);
+            const targetAlive = Math.floor(currentPopulation / PARTICLES_PER_PERSON);
+            
+            // Make the MOST RECENT particles alive (gold)
+            for (let i = 0; i < particleIndex; i++) {
+                const shouldBeAlive = i >= (particleIndex - targetAlive);
+                
+                if (shouldBeAlive) {
+                    // ALIVE - INTENSE neon gold/orange with maximum glow
+                    colors[i * 3] = 1.0;
+                    colors[i * 3 + 1] = 0.7;  // More orange for contrast
+                    colors[i * 3 + 2] = 0.1;  // Very little blue for intense warmth
+                    sizes[i] = 4.0 + Math.random() * 2.0; // Even bigger
+                } else {
+                    // DECEASED - dimmer blue
+                    colors[i * 3] = (0.4 + Math.random() * 0.15) * 0.7;  // Dimmed down more
+                    colors[i * 3 + 1] = (0.5 + Math.random() * 0.15) * 0.7;
+                    colors[i * 3 + 2] = (0.75 + Math.random() * 0.15) * 0.7;
+                    sizes[i] = 1.2 + Math.random() * 0.8;
+                }
+            }
+            
+            particles.geometry.attributes.color.needsUpdate = true;
+            particles.geometry.attributes.size.needsUpdate = true;
+            
+            // Pass the tweened population to stats
+            updateStats(currentPopulation);
+        }
+        
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('en-US');
+        }
+        
+        function updateStats(tweenedPopulation) {
+            const currentBirths = particleIndex * PARTICLES_PER_PERSON;
+            
+            // Use the tweened population value passed in
+            const aliveNumber = tweenedPopulation || 0;
+            const alivePercent = currentBirths > 0 ? ((aliveNumber / currentBirths) * 100).toFixed(1) : 0;
+            
+            document.getElementById('stats').innerHTML = `
+                <span class="stat-number stat-deceased">${formatNumber(currentBirths)}</span>
+                lives lived
+                <br><br>
+                <span class="stat-number stat-alive">${formatNumber(aliveNumber)}</span>
+                lives being lived
+            `;
+        }
+        
+//(${alivePercent}%)
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const deltaTime = clock.getDelta();
+            
+            if (isAnimating && !isFrozen) {
+                updateBenchmark(deltaTime);
+            }
+            
+            // Gentle rotation
+            particles.rotation.y += 0.001;
+            
+            renderer.render(scene, camera);
+        }
+        
+        document.getElementById('startBtn').addEventListener('click', () => {
+            isAnimating = true;
+            const buttonContainer = document.getElementById('button-container');
+            const soundNote = document.querySelector('.sound-note');
+
+            buttonContainer.style.transition = 'none';
+            soundNote.style.transition = 'none';
+            buttonContainer.style.opacity = '0';
+            soundNote.style.opacity = '0';
+            buttonContainer.style.pointerEvents = 'none';
+
+            // Play the background music
+            const audio = document.getElementById('backgroundMusic');
+            audio.play().catch(error => {
+                console.log('Audio playback failed:', error);
+            });
+        });
+        
+        init();
+        animate();
+    </script>
+</body>
+</html>
