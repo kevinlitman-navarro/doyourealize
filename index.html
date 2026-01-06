@@ -12,7 +12,7 @@
         body {
             font-family: 'Crimson Text', serif;
             background: #000;
-            color: #fff;
+            color: #e8e8e0;
             overflow: hidden;
         }
         
@@ -88,19 +88,126 @@
         button {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
+            color: #e8e8e0;
             padding: 0.8rem 1.5rem;
             font-family: 'Crimson Text', serif;
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
-        
+
         button:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 200, 100, 0.5);
         }
-        
+
+        #infoBtn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            font-weight: 400;
+        }
+
+        #infoOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #infoOverlay.active {
+            display: flex;
+        }
+
+        .info-content {
+            max-width: 600px;
+            padding: 3rem;
+            text-align: center;
+            font-family: 'Crimson Text', serif;
+            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: 0.1em;
+        }
+
+        .info-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .info-content a {
+            color: rgba(232, 232, 224, 0.9);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(232, 232, 224, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .info-content a:hover {
+            color: rgba(255, 200, 100, 0.9);
+            border-bottom-color: rgba(255, 200, 100, 0.5);
+        }
+
+        .info-content .lyrics {
+            font-style: italic;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            line-height: 2;
+            margin-top: 3rem;
+        }
+
+        .info-content .credit {
+            font-size: 0.95rem;
+            opacity: 0.6;
+            margin-top: 2.5rem;
+            margin-bottom: 0;
+        }
+
+        .close-info {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: #e8e8e0;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 0.5rem;
+            line-height: 1;
+        }
+
+        .close-info:hover {
+            opacity: 1;
+            background: none;
+            border: none;
+        }
+
         #startBtn {
             font-family: 'Cormorant Garamond', serif;
             font-size: 4rem;
@@ -131,6 +238,31 @@
     </style>
 </head>
 <body>
+    <button id="infoBtn">i</button>
+
+    <div id="infoOverlay">
+        <button class="close-info">&times;</button>
+        <div class="info-content">
+            <h2>About this project</h2>
+        
+            <p>
+                This project was created using Population Reference Bureau <a href="https://www.prb.org/articles/how-many-people-have-ever-lived-on-earth/" target="_blank">estimates</a> on the number of humans that have ever lived.
+                It was inspired by the The Flaming Lips' song <i><a href="https://www.youtube.com/watch?v=lPXWt2ESxVY" target="_blank">Do You Realize??</a></i>
+            </p>
+            <div class="lyrics">
+                Do you realize<br>
+                That you have the most beautiful face<br>
+                Do you realize<br>
+                We're floating in space<br>
+                Do you realize<br>
+                That happiness makes you cry<br>
+                Do you realize<br>
+                That everyone you know, someday, will die<br>
+            </div>
+            <p class="credit">Music and visual by Kevin Litman-Navarro<br>"Do You Realize??" written by The Flaming Lips</p>
+        </div>
+    </div>
+
     <div id="canvas-container"></div>
     <div id="overlay">
         <div class="text-overlay">do you realize</div>
@@ -364,7 +496,35 @@
                 console.log('Audio playback failed:', error);
             });
         });
-        
+
+        // Info button and overlay handlers
+        const infoBtn = document.getElementById('infoBtn');
+        const infoOverlay = document.getElementById('infoOverlay');
+        const closeInfoBtn = document.querySelector('.close-info');
+
+        infoBtn.addEventListener('click', () => {
+            if (infoOverlay.classList.contains('active')) {
+                infoOverlay.classList.remove('active');
+                infoBtn.textContent = 'i';
+            } else {
+                infoOverlay.classList.add('active');
+                infoBtn.textContent = '×';
+            }
+        });
+
+        closeInfoBtn.addEventListener('click', () => {
+            infoOverlay.classList.remove('active');
+            infoBtn.textContent = 'i';
+        });
+
+        // Close overlay when clicking outside the content
+        infoOverlay.addEventListener('click', (e) => {
+            if (e.target === infoOverlay) {
+                infoOverlay.classList.remove('active');
+                infoBtn.textContent = 'i';
+            }
+        });
+
         init();
         animate();
     </script>
